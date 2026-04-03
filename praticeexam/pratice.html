@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body></body>
+</html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Finance Dashboard</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <!-- HEADER -->
+    <header>
+      <div class="header-left">
+        <h1>🪙 FinTech</h1>
+      </div>
+      <div class="header-right">
+        <label><strong>Role:</strong>
+          <select id="roleSelect" onchange="changeRole()">
+            <option value="viewer">Viewer</option>
+            <option value="admin">Admin</option>
+          </select>
+        </label>
+        <button id="addBtn" onclick="openModal()" style="display: none">
+          + Add Transaction
+        </button>
+        <button onclick="toggleDark()">🌙 Dark</button>
+      </div>
+    </header>
+
+    <!-- NAV TABS -->
+    <nav>
+      <button class="tab-btn active" onclick="showTab('dashboard', this)">
+        Dashboard
+      </button>
+      <button class="tab-btn" onclick="showTab('transactions', this)">
+        Transactions
+      </button>
+      <button class="tab-btn" onclick="showTab('insights', this)">
+        Insights
+      </button>
+    </nav>
+
+    <!-- DASHBOARD TAB -->
+    <div id="dashboard" class="tab-content active">
+      <!-- Summary Cards -->
+      <div class="cards-row">
+        <div class="card blue">
+          <p>Total Balance</p>
+          <h2 id="cardBalance">$0</h2>
+        </div>
+        <div class="card green">
+          <p>Total Income</p>
+          <h2 id="cardIncome">$0</h2>
+        </div>
+        <div class="card red">
+          <p>Total Expenses</p>
+          <h2 id="cardExpense">$0</h2>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-row">
+        <div class="chart-box">
+          <h3>Balance Trend</h3>
+          <canvas id="lineChart"></canvas>
+        </div>
+        <div class="chart-box">
+          <h3>Spending Breakdown</h3>
+          <canvas id="doughnutChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-box full">
+        <h3>Monthly Comparison</h3>
+        <canvas id="barChart"></canvas>
+      </div>
+
+      <!-- Recent Transactions -->
+      <div class="chart-box full">
+        <div class="box-header">
+          <h3>Recent Transactions</h3>
+          <button onclick="showTab('transactions', null)">View All →</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Description</th>
+              <th>Category</th>
+              <th>Type</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody id="recentBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TRANSACTIONS TAB -->
+    <div id="transactions" class="tab-content">
+      <div class="filter-row">
+        <input
+          type="text"
+          id="searchBox"
+          placeholder="Search..."
+          oninput="renderTable()"
+        />
+        <select id="typeFilter" onchange="renderTable()">
+          <option value="all">All Types</option>
+          <option value="income">Income</option>
+          <option value="expense">Expense</option>
+        </select>
+        <select id="catFilter" onchange="renderTable()">
+          <option value="all">All Categories</option>
+        </select>
+        <button id="addBtn2" onclick="openModal()" style="display: none">
+          + Add
+        </button>
+      </div>
+
+      <div class="chart-box full">
+        <table>
+          <thead>
+            <tr>
+              <th onclick="sortBy('date')">Date ↕</th>
+              <th onclick="sortBy('desc')">Description ↕</th>
+              <th onclick="sortBy('category')">Category ↕</th>
+              <th>Type</th>
+              <th onclick="sortBy('amount')">Amount ↕</th>
+            </tr>
+          </thead>
+          <tbody id="txBody"></tbody>
+        </table>
+        <p id="txCount" class="count-text">Showing 0 transactions</p>
+      </div>
+    </div>
+
+    <!-- INSIGHTS TAB -->
+    <div id="insights" class="tab-content">
+      <div class="cards-row">
+        <div class="card blue">
+          <p>Top Spending</p>
+          <h2 id="topCat">—</h2>
+          <small id="topAmt"></small>
+        </div>
+        <div class="card green">
+          <p>Savings Rate</p>
+          <h2 id="savingsRate">0%</h2>
+          <small>of income saved</small>
+        </div>
+        <div class="card red">
+          <p>Avg Expense</p>
+          <h2 id="avgExpense">$0</h2>
+          <small>per transaction</small>
+        </div>
+      </div>
+
+      <div class="chart-box full">
+        <h3>Category Breakdown</h3>
+        <div id="catBars"></div>
+      </div>
+
+      <div class="chart-box full">
+        <h3>💡 Insights</h3>
+        <div id="insightsList"></div>
+      </div>
+    </div>
+
+    <!-- ADD TRANSACTION MODAL -->
+    <div id="modal" class="modal-bg" onclick="closeModal(event)">
+      <div class="modal-box">
+        <h3>Add Transaction</h3>
+        <label
+          >Description
+          <input type="text" id="fDesc" placeholder="e.g. Grocery" />
+        </label>
+        <label
+          >Amount ($)
+          <input type="number" id="fAmount" placeholder="100" />
+        </label>
+        <label
+          >Date
+          <input type="date" id="fDate" />
+        </label>
+        <label
+          >Type
+          <select id="fType">
+            <option value="expense">Expense</option>
+            <option value="income">Income</option>
+          </select>
+        </label>
+        <label
+          >Category
+          <select id="fCategory">
+            <option>Food</option>
+            <option>Housing</option>
+            <option>Transport</option>
+            <option>Utilities</option>
+            <option>Entertainment</option>
+            <option>Shopping</option>
+            <option>Health</option>
+            <option>Income</option>
+          </select>
+        </label>
+        <div class="modal-btns">
+          <button onclick="closeModalDirect()">Cancel</button>
+          <button class="btn-primary" onclick="addTransaction()">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROLE BANNER -->
+    <div id="roleBanner" class="role-banner">👁 Viewer — Read Only</div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
